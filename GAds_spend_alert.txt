@@ -1,0 +1,56 @@
+/*** 
+*
+* Monthly Budget Target - Email Alert
+*
+* This script compares this month's ad spend to your monthly budget target
+* In case the ad spend is greater than your budget target an alert is sent via email
+*
+*
+* Version 1.0
+*
+*/
+ 
+ 
+var MONTHLY_BUDGET = 3120000; // set your alert target
+var EMAIL_ADDRESS = "bethlen.david@hdmarketing.hu"; // insert your email address between the quotes
+var EMAIL_SUBJECT = "[GAds Script Alert] Monthly budget alert for account: ";
+var EMAIL_BODY = 
+    "\n\n"+
+    "You probably want to limit some campaigns.\n" +
+    "---\n";
+ 
+ 
+function main() {
+ 
+  var query =
+      "SELECT " +
+      "metrics.cost_micros " +
+      "FROM customer "+
+      "WHERE segments.date DURING THIS_MONTH";
+ 
+  try {
+    var result = AdsApp.search(query);
+ 
+    while (result.hasNext()) {
+      var row = result.next();
+      var adSpend = convertMicrosToCurrency(row.metrics.costMicros, true);
+      Logger.log("Total Adspend: "+adSpend);
+    }
+  } catch (e) {
+   Logger.log("### ERROR: "+e);
+  }
+ 
+  if (adSpend>MONTHLY_BUDGET) {
+    Logger.log("Total spend this month: "+adSpend+"\n ---> You probably want to pause some campaigns.");
+    MailApp.sendEmail(EMAIL_ADDRESS,EMAIL_SUBJECT+AdsApp.currentAccount().getName(),"Total spend this month: "+adSpend+EMAIL_BODY );
+  }
+}
+ 
+ 
+function convertMicrosToCurrency(micros, rounded) {
+  if (rounded == true) {
+    return Number(Math.round(micros/1000000+'e2')+'e-2'); // returns currency value with 2 decimals
+  } else if (rounded == false)  {
+    return micros/1000000; // returns currency value without any rounding
+  }
+}

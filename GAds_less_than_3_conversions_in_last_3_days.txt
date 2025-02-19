@@ -1,0 +1,57 @@
+var minConv = 3; // set your daily minimum spend limit
+var EMAIL_ADDRESS = "email"; // insert your email address between the quotes
+var EMAIL_SUBJECT = "[GAds Script Alert] <3 conversions in the last 3 days for account: ";
+var EMAIL_BODY = 
+    "\n\n"+
+    "You probably want to look into the GTM container and the website :)\n" +
+    "---\n";
+ 
+function main() {
+  // Calculate the date range for the last 3 days
+  var today = new Date();
+  var threeDaysAgo = new Date();
+  threeDaysAgo.setDate(today.getDate() - 3);
+
+  var todayFormatted = formatDate(today);
+  var threeDaysAgoFormatted = formatDate(threeDaysAgo);
+
+  var query =
+      "SELECT " +
+      "metrics.all_conversions " +
+      "FROM customer " +
+      "WHERE segments.date BETWEEN '" + threeDaysAgoFormatted + "' AND '" + todayFormatted + "'";
+
+  try {
+    var result = AdsApp.search(query);
+    var convSum = 0;
+    
+    while (result.hasNext()) {
+      var row = result.next();
+      Logger.log("Row data: " + JSON.stringify(row)); // Log the entire row object
+      
+      var conversions = parseFloat(row.metrics.allConversions); // Ensure it's a number
+      
+      if (!isNaN(conversions)) { // Check if the conversion value is a valid number
+        convSum += conversions;
+      } else {
+        Logger.log("Invalid conversion value encountered: " + row.metrics.all_conversions);
+      }
+    }
+    Logger.log("Total conversions in the last 3 days: " + convSum);
+  } catch (e) {
+    Logger.log("### ERROR: " + e);
+  }
+ 
+  if (convSum <= minConv) {
+    Logger.log("Total conversions in the last 3 days: " + convSum + "\n ---> You probably want to play some with GTM :)");
+    MailApp.sendEmail(EMAIL_ADDRESS, EMAIL_SUBJECT + AdsApp.currentAccount().getName(), "Total conversions in the last 3 days: " + convSum + EMAIL_BODY);
+  }
+}
+
+// Helper function to format the date as YYYY-MM-DD
+function formatDate(date) {
+  var year = date.getFullYear();
+  var month = ('0' + (date.getMonth() + 1)).slice(-2);
+  var day = ('0' + date.getDate()).slice(-2);
+  return year + '-' + month + '-' + day;
+}

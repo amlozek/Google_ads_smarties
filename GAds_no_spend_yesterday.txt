@@ -1,0 +1,56 @@
+/*** 
+*
+* No spend yesterday hours - Email Alert
+*
+* Version 1.0
+*
+*/
+ 
+/*** 
+*const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
+*const now = new Date();
+*const 24_hours_ago = new Date(now.getTime() - MILLIS_PER_DAY);
+*/
+var SPEND = 0; // set your daily minimum spend limit
+var EMAIL_ADDRESS = "bethlen.david@hdmarketing.hu"; // insert your email address between the quotes
+var EMAIL_SUBJECT = "[GAds Script Alert] No spend yesterday for account: ";
+var EMAIL_BODY = 
+    "\n\n"+
+    "You probably want to email this client.\n" +
+    "---\n";
+ 
+ 
+function main() {
+ 
+  var query =
+      "SELECT " +
+      "metrics.cost_micros " +
+      "FROM customer "+
+      "WHERE segments.date DURING YESTERDAY";
+ 
+  try {
+    var result = AdsApp.search(query);
+ 
+    while (result.hasNext()) {
+      var row = result.next();
+      var adSpend = convertMicrosToCurrency(row.metrics.costMicros, true);
+      Logger.log("Total Adspend: "+adSpend);
+    }
+  } catch (e) {
+   Logger.log("### ERROR: "+e);
+  }
+ 
+  if (adSpend == SPEND) {
+    Logger.log("Total spend yesterday: "+adSpend+"\n ---> You probably want to email this client.");
+    MailApp.sendEmail(EMAIL_ADDRESS,EMAIL_SUBJECT+AdsApp.currentAccount().getName(),"Total spend yesterday: "+adSpend+EMAIL_BODY );
+  }
+}
+ 
+ 
+function convertMicrosToCurrency(micros, rounded) {
+  if (rounded == true) {
+    return Number(Math.round(micros/1000000+'e2')+'e-2'); // returns currency value with 2 decimals
+  } else if (rounded == false)  {
+    return micros/1000000; // returns currency value without any rounding
+  }
+}

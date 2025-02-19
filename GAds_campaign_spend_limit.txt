@@ -1,0 +1,76 @@
+/*** 
+*
+* Monthly Budget Target - Email Alert
+*
+* This script compares this month's ad spend to your monthly budget target
+* In case the ad spend is greater than your budget target an alert is sent via email
+*
+*
+* Version 1.0
+*
+*/
+ 
+ 
+var MONTHLY_BUDGET = 750000; // set your alert target
+var MONTHLY_CAMPAIGN_BUDGET = 80000;
+var EMAIL_ADDRESS = "bethlen.david@hdmarketing.hu"; // insert your email address between the quotes
+var EMAIL_ADDRESS2 = "nador.botond@hdmarketing.hu"; // insert your email address between the quotes
+var EMAIL_SUBJECT = "[GAds Script Alert] Monthly budget alert for account: ";
+var EMAIL_BODY = 
+    "\n\n"+
+    "You probably want to limit some campaigns.\n" +
+    "---\n";
+ 
+ 
+function main() {
+ 
+  var query =
+      "SELECT metrics.cost_micros FROM customer WHERE segments.date DURING THIS_MONTH";
+  
+  var query2 = 
+      "SELECT campaign.name, campaign.status, metrics.cost_micros FROM campaign WHERE segments.date DURING THIS_MONTH AND campaign.status = 'ENABLED' AND metrics.cost_micros > 3000000000";
+ 
+  try {
+    var result = AdsApp.search(query);
+    var result2 = AdsApp.search(query2);
+ 
+    while (result.hasNext()) {
+      var row = result.next();
+      var adSpend = convertMicrosToCurrency(row.metrics.costMicros, true);
+      Logger.log("Total Adspend: "+adSpend);
+      
+    }
+    var campArr = [];
+    while (result2.hasNext()) {
+      var row = result2.next();
+      var adSpend2 = convertMicrosToCurrency(row.metrics.costMicros, true);
+      var campName = row.campaign.name;
+      campArr.push("Campaign name: "+campName+" - Spend: "+adSpend2);
+          Logger.log(campArr);
+      Logger.log("Overspending campaign: "+campName+adSpend2);
+    }
+  } catch (e) {
+   Logger.log("### ERROR: "+e);
+  }
+ 
+  if (adSpend>MONTHLY_BUDGET) {
+    Logger.log("Mail sent - Total spend this month: "+adSpend+"\n ---> You probably want to pause some campaigns.");
+    MailApp.sendEmail(EMAIL_ADDRESS,EMAIL_SUBJECT+AdsApp.currentAccount().getName(),"Total spend this month: "+adSpend+EMAIL_BODY );
+    MailApp.sendEmail(EMAIL_ADDRESS2,EMAIL_SUBJECT+AdsApp.currentAccount().getName(),"Total spend this month: "+adSpend+EMAIL_BODY );
+  }
+
+  if (adSpend2>MONTHLY_CAMPAIGN_BUDGET) {
+    Logger.log("Mail sent - Campaigns overspending\n ---> You probably want to pause some of them.");
+    MailApp.sendEmail(EMAIL_ADDRESS,EMAIL_SUBJECT+AdsApp.currentAccount().getName(),"Campaigns overspending this month: \n\n"+campArr.join('\n')+"\n"+EMAIL_BODY );
+    MailApp.sendEmail(EMAIL_ADDRESS2,EMAIL_SUBJECT+AdsApp.currentAccount().getName(),"Campaigns overspending this month: \n\n"+campArr.join('\n')+"\n"+EMAIL_BODY );
+  }
+}
+ 
+ 
+function convertMicrosToCurrency(micros, rounded) {
+  if (rounded == true) {
+    return Number(Math.round(micros/1000000+'e2')+'e-2'); // returns currency value with 2 decimals
+  } else if (rounded == false)  {
+    return micros/1000000; // returns currency value without any rounding
+  }
+}
