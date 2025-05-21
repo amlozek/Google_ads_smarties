@@ -5,7 +5,9 @@ function GEOCODE_GOOGLE(address) {
         var r = Maps.newGeocoder().geocode(address);
         if (r.results && r.results.length > 0) {
             var location = r.results[0].geometry.location;
-            return location.lat + ":" + location.lng;
+            var lat = location.lat.toFixed(6);
+            var lng = location.lng.toFixed(6);
+            return lat + ":" + lng;
         } else {
             return "";
         }
@@ -27,7 +29,9 @@ function GEOCODE_YANDEX(address) {
         try {
             var pos = res.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos;
             var coords = pos.split(" ");
-            return coords[1] + ":" + coords[0];
+            var lng = parseFloat(coords[0]).toFixed(6);
+            var lat = parseFloat(coords[1]).toFixed(6);
+            return lat + ":" + lng;
         } catch (e) {
             return "";
         }
