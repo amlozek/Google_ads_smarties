@@ -1,0 +1,35 @@
+function GEOCODE_GOOGLE(address) {
+    if (address.map) {
+        return address.map(GEOCODE_GOOGLE);
+    } else {
+        var r = Maps.newGeocoder().geocode(address);
+        if (r.results && r.results.length > 0) {
+            var location = r.results[0].geometry.location;
+            return location.lat + ":" + location.lng;
+        } else {
+            return "";
+        }
+    }
+}
+
+function GEOCODE_YANDEX(address) {
+    if (address.map) {
+        return address.map(GEOCODE_YANDEX);
+    } else {
+        var input = encodeURI(address);
+        var r = UrlFetchApp.fetch(
+            "https://geocode-maps.yandex.ru/1.x/?format=json&geocode=" +
+            input + "&results=1&lang=en-US", {
+                "method": "get"
+            }
+        );
+        var res = JSON.parse(r.getContentText());
+        try {
+            var pos = res.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos;
+            var coords = pos.split(" ");
+            return coords[1] + ":" + coords[0];
+        } catch (e) {
+            return "";
+        }
+    }
+}
