@@ -33,18 +33,19 @@ function sendMonthlyReports() {
 
   threads.forEach(thread => {
     const message = thread.getMessages()[0]; // Only process the first message in each thread
-    const emailSubject = message.getSubject();
-    const config = configList.find(cfg => emailSubject.includes(cfg.subjectPart));
+    const originalSubject = message.getSubject();
+    const config = configList.find(cfg => originalSubject.includes(cfg.subjectPart));
     if (config) {
       const attachments = message.getAttachments().filter(att => att.getContentType() === "application/pdf");
       if (attachments.length > 0) {
+        const modifiedSubject = originalSubject.includes(" - ") ? originalSubject.split(" - ").slice(0, -1).join(" - ") : originalSubject;
         MailApp.sendEmail({
           to: config.emails.join(','),
-          subject: emailSubject,
+          subject: modifiedSubject,
           body: config.message,
           attachments: attachments
         });
-        Logger.log(`Email sent -> Subject: "${emailSubject}", To: ${config.emails.join(', ')}, Message: "${config.message}"`);
+        Logger.log(`Email sent -> Subject: "${modifiedSubject}", To: ${config.emails.join(', ')}, Message: "${config.message}"`);
       }
     }
   });
