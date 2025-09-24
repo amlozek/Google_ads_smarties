@@ -14,7 +14,6 @@
 var MONTHLY_BUDGET = 750000; // set your alert target
 var MONTHLY_CAMPAIGN_BUDGET = 80000;
 var EMAIL_ADDRESS = "bethlen.david@hdmarketing.hu"; // insert your email address between the quotes
-var EMAIL_ADDRESS2 = "nador.botond@hdmarketing.hu"; // insert your email address between the quotes
 var EMAIL_SUBJECT = "[GAds Script Alert] Monthly budget alert for account: ";
 var EMAIL_BODY = 
     "\n\n"+
@@ -56,13 +55,11 @@ function main() {
   if (adSpend>MONTHLY_BUDGET) {
     Logger.log("Mail sent - Total spend this month: "+adSpend+"\n ---> You probably want to pause some campaigns.");
     MailApp.sendEmail(EMAIL_ADDRESS,EMAIL_SUBJECT+AdsApp.currentAccount().getName(),"Total spend this month: "+adSpend+EMAIL_BODY );
-    MailApp.sendEmail(EMAIL_ADDRESS2,EMAIL_SUBJECT+AdsApp.currentAccount().getName(),"Total spend this month: "+adSpend+EMAIL_BODY );
   }
 
   if (adSpend2>MONTHLY_CAMPAIGN_BUDGET) {
     Logger.log("Mail sent - Campaigns overspending\n ---> You probably want to pause some of them.");
     MailApp.sendEmail(EMAIL_ADDRESS,EMAIL_SUBJECT+AdsApp.currentAccount().getName(),"Campaigns overspending this month: \n\n"+campArr.join('\n')+"\n"+EMAIL_BODY );
-    MailApp.sendEmail(EMAIL_ADDRESS2,EMAIL_SUBJECT+AdsApp.currentAccount().getName(),"Campaigns overspending this month: \n\n"+campArr.join('\n')+"\n"+EMAIL_BODY );
   }
 }
  
